@@ -1,3 +1,0 @@
-Welcome to Scala-MUD!
-This text is found in resources/MOTD.txt.
-
