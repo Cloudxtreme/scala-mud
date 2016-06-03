@@ -3,9 +3,6 @@ import java.net.InetSocketAddress
 import akka.actor._
 import akka.io._
 import akka.io.Tcp._
-import akka.util._
-
-case class ChatMsg(user: String, msg: String)
 
 class Server extends Actor {
   import context.system
@@ -18,12 +15,10 @@ class Server extends Actor {
     case Bound(localAddr) =>
       println(s"Listening for connections on port ${localAddr.getPort}...")
 
-    // a new connection, create a client actor and begin...
     case Connected(remote, local) =>
       sender() ! Register(context actorOf Props[Client])
 
-      // a chat message from someone to everyone else
-    case msg: ChatMsg =>
+    case msg: Broadcast =>
       context.children foreach (_ ! msg)
   }
 }

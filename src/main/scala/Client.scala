@@ -8,62 +8,48 @@ import scala.io.Source
 
 // every connection is a client
 class Client extends Actor {
-  def resource(path: String) = Source.fromFile(getClass.getResource(path).toURI)
+  var socketRef: Option[ActorRef] = None
 
-  // handle messages from the server
+  // initial handler
   def receive = {
     case Received(data) =>
+      socketRef = Some(sender())
+
+      // send the welcome and prompt
       welcome()
       loginPrompt()
 
       // ask the user for credentials
-      context become login
-
-      // server stopped
-    case PeerClosed => context stop self
+      become(login)
   }
+
+  // change the message handler, but retain common handlers
+  def become(h: Actor.Receive) =
+    context become (h orElse {
+      case PeerClosed => context stop self
+    })
 
   // handle the user picking a login name
   def login: Actor.Receive = {
-    case Received(username) if username.utf8String.trim.isEmpty =>
-      send("Invalid username!\n")
-      loginPrompt()
-
     case Received(username) =>
-      prompt()
-
-      // start the main chat server
-      context become chat(username.utf8String.trim)
-
-      // server stopped
-    case PeerClosed => context stop self
-  }
-
-  // handle user user sending chat messages
-  def chat(user: String): Actor.Receive = {
-    case Received(msg) =>
-      context.parent ! ChatMsg(user, msg.utf8String)
-
-      // wait for another message
-      prompt()
-
-      // server stopped
-    case PeerClosed => context stop self
-
-      // a chat message from a user
-    case ChatMsg(from, msg) if user != from =>
-      send(Bold.On(from) + s" says: $msg")
+      if (username.utf8String.trim.isEmpty) {
+        sender() ! "Invalid username!\n"
+        loginPrompt()
+      } else {
+        become(new Player(this, username.utf8String.trim).handler)
+        prompt()
+      }
   }
 
   // write a series of bytes back to the client
-  def send(obj: Any) = sender() ! Write(ByteString(obj.toString))
+  def !(obj: Any) = socketRef foreach (_ ! Write(ByteString(obj.toString)))
 
   // send the message of the day
-  def welcome() = send(resource("/motd.txt").mkString)
+  def welcome() = self ! resource("/motd.txt").mkString
 
   // send a login prompt to the user
-  def loginPrompt() = send(Bold.On("login: "))
+  def loginPrompt() = self ! Bold.On("login: ")
 
-  // send a prompt to the client
-  def prompt() = send(Color.Yellow("$ "))
+  // find a resource from the project and load it
+  def resource(path: String) = Source.fromFile(getClass.getResource(path).toURI)
 }
