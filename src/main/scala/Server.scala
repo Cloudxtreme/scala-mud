@@ -16,9 +16,6 @@ class Server extends Actor {
       println(s"Listening for connections on port ${localAddr.getPort}...")
 
     case Connected(remote, local) =>
-      sender() ! Register(context actorOf Props[Client])
-
-    case msg: Broadcast =>
-      context.children foreach (_ ! msg)
+      sender() ! Register(context actorOf Props(classOf[Client], sender()))
   }
 }
