@@ -1,16 +1,18 @@
 package Mudb
 
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
-import scala.collection.mutable
-
-case class Entity(name: String, short: String, long: String) extends AnyRef
+class Entity(prototype: JsObject) extends AnyRef
   with Traversable[Entity]
-  with mutable.SetLike[Entity,Entity]
-  with mutable.Set[Entity]
+  with scala.collection.mutable.SetLike[Entity,Entity]
+  with scala.collection.mutable.Set[Entity]
 {
-  override def empty: Entity = new Entity("entity", "an entity", "Just an ordinary entity.")
+  override def empty: Entity = new Entity(JsObject(Seq()))
+
+  // get the required name and optional short/long descriptions
+  val name = (prototype \ "name").as[String]
+  val short = (prototype \ "short").asOpt[String] getOrElse "an object"
+  val long = (prototype \ "long").asOpt[String] getOrElse "Just an object."
 
   // use the short description of the entity as the string conversion
   override def toString = short

@@ -4,6 +4,7 @@ import play.api.libs.json._
 import play.api.libs.json.Reads._
 
 import scala.io.Source
+import scala.reflect.ClassTag
 
 object Master {
   private var prototypes = Map[String,JsObject]()
@@ -21,10 +22,11 @@ object Master {
   }
 
   // create a new instance of a prototype object
-  def clone[T <: Entity ](path: String, in: Option[Entity] = None): Option[T] = {
-    (prototypes get path) map (Json.reads[T]
-  }
+  def clone[T <: Entity : ClassTag](path: String)(implicit tag: ClassTag[T]): Option[T] =
+    (prototypes get path) map { prototype =>
+      val constructor = tag.runtimeClass.getConstructor(classOf[JsObject])
 
-  //
-  implicit def readsEntity(json: JsValue): JsResult[Entity] =
+      // instantiate the object with the prototype
+      constructor.newInstance(prototype).asInstanceOf[T]
+    }
 }
