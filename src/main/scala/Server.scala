@@ -8,7 +8,7 @@ class Server extends Actor {
   import context.system
 
   // start listening for connections
-  IO(Tcp) ! Bind(self, new InetSocketAddress("127.0.0.1", 8001))
+  IO(Tcp) ! Bind(self, new InetSocketAddress("127.0.0.1", Config.port))
 
   // handle incoming connections
   def receive = {

@@ -7,7 +7,7 @@ import scala.io.Source
 class Client(val player: Mudb.Player) extends Actor {
   def receive: Actor.Receive = {
     case Received(data) =>
-      player write Source.fromFile(getClass.getResource("/motd.txt").toURI).mkString
+      player write (Config.welcome getOrElse "Scala-MUD")
       player write Bold.On("login: ")
 
       // switch to the login handler

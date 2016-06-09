@@ -1,0 +1,3 @@
+Welcome to Scala-MUD!
+This text is found in /resources/welcome.txt.
+

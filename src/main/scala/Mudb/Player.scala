@@ -6,7 +6,7 @@ import akka.util._
 import fansi._
 import play.api.libs.json._
 
-class Player(val ref: ActorRef, prototype: JsObject)(implicit system: ActorSystem) extends Entity(prototype) {
+class Player(val ref: ActorRef, prototype: JsObject)(implicit system: ActorSystem) {
 
   // send data back to the client
   def write(obj: Any) = ref ! Write(ByteString(obj.toString))

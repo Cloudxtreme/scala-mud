@@ -1,13 +1,25 @@
 import akka.actor._
+import slick.driver.SQLiteDriver.api._
+
+import scala.concurrent.ExecutionContext
+import scala.util._
 
 object Driver extends App {
   implicit val system: ActorSystem = ActorSystem("MUD")
+  implicit val ec: ExecutionContext = system.dispatcher
 
-  // have it load all the object database files
-  Mudb.Master.loadObjects("/rooms.json")
+  // connect to the mud database
+  val db = Config.db map (path => Database.forURL(s"jdbc:sqlite:$path", driver="org.sqlite.JDBC"))
 
-  val lobby = Mudb.Master.clone[Mudb.Room]("rooms/Lobby")
+  // example room lookup
+  val q = Mudb.Master.entities filter { _.id === 1 }
+  val p = db.get run q.result
 
-  // start the server by creating the actor
-  system actorOf Props[Server]
+  p.onComplete {
+    case Success(x) => println(x.head.long)
+    case Failure(e) => println(e)
+  }
+
+  // start the server
+  val server = system actorOf Props[Server]
 }
