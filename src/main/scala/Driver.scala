@@ -1,21 +1,15 @@
 import akka.actor._
 import slick.driver.SQLiteDriver.api._
 
-import scala.concurrent.ExecutionContext
 import scala.util._
 
 object Driver extends App {
-  implicit val system: ActorSystem = ActorSystem("MUD")
-  implicit val ec: ExecutionContext = system.dispatcher
-
-  // connect to the mud database
-  val db = Config.db map (path => Database.forURL(s"jdbc:sqlite:$path", driver="org.sqlite.JDBC"))
+  implicit val system = ActorSystem("MUD")
+  implicit val database = Database.forURL(s"jdbc:sqlite:${Config.db}", "org.sqlite.JDBC")
+  implicit val ec = system.dispatcher
 
   // example room lookup
-  val q = Mudb.Master.entities filter { _.id === 1 }
-  val p = db.get run q.result
-
-  p.onComplete {
+  Mudb.Master.getEntity(1).onComplete {
     case Success(x) => println(x.head.long)
     case Failure(e) => println(e)
   }

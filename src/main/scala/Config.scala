@@ -15,5 +15,5 @@ object Config {
   val welcome = (json \ "welcome").asOpt[String] map (resource(_).mkString)
 
   // location of the database file
-  val db = (json \ "db").asOpt[String] map (getClass.getResource(_).getPath)
+  val db =  getClass.getResource((json \ "db").as[String]).getPath
 }
