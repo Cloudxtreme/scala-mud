@@ -10,7 +10,7 @@ object Master {
   val exits = TableQuery[ExitTable]
 
   // compiled queries
-  val entityQ = Compiled((id: Rep[Int]) => entities.filter(_.id === id))
+  val entityQ = Compiled((id: ConstColumn[Int]) => entities.filter(_.id === id))
 
   // methods for running queries on the loaded database
   def getEntity(id: Int)(implicit db: Database, ec: ExecutionContext) =
